@@ -4,111 +4,206 @@
 
 #include "assignment2.h"
 
+//int add_user_password(const char* file_name, const char* username, const char* password) {
+//  // implement me
+//  FILE *file;
+//  long ulen = strlen(username);
+//  long plen = strlen(password);
+//  file = fopen(file_name, "r+");
+//  if(!file){ 
+//    file = fopen(file_name,"w"); //If file does not exist, make a new file right now.
+//    if (!file) // if fail to opne of make a file
+//    {
+//      return -1;
+//    }
+//    fprintf(file, "%ld %ld\n", ulen,plen);
+//    fwrite(username, 1, ulen, file); //Write down username and password
+//    fwrite(password, 1, plen, file);
+//    fclose(file);
+//    return 1;
+//  }
+//
+//  while (1) // If the file exist
+//  {
+//    long existing_ulen;
+//    long existing_plen;
+//    if(fscanf(file, "%ld %ld\n", &existing_ulen, &existing_plen) != 2){ // then check the data if integrity
+//      break;
+//    }
+//    char *existing_user = (char*)malloc(existing_ulen + 1); //Allocate memory for the username that is about to be read
+//    if (!existing_user)
+//    {
+//      fclose(file);
+//      return -1;
+//    }
+//    fread(existing_user, 1, existing_ulen, file); 
+//    existing_user[existing_ulen] = '\0';
+//
+//    // Skip the password part corresponding to this user (because we only want to check if the username exists here)
+//    fseek(file, existing_plen,SEEK_CUR);
+//    if (strcmp(existing_user, username)==0)
+//    {
+//      free(existing_user);
+//      fclose(file);
+//      return 0;
+//    }
+//    free(existing_user);
+//  }
+//  fseek(file, 0, SEEK_END); //user does not exist then Move to the end of the file and write
+//  fprintf(file, "%ld %ld\n", ulen, plen);
+//  fwrite(username, 1, ulen, file);
+//  fwrite(password, 1, plen, file);
+//  fclose(file);
+//
+//  return 1;
+//}
+//
+//int check_user_password(const char* file_name, const char* username, const char* password) {
+//  // implement me
+//  FILE *file;
+//  long ulen, plen;
+//  file = fopen(file_name, "r"); // reading mode
+//  if (!file) {
+//      return -1; // the file does not exist
+//  }
+//  while (1) {
+//      // check username and password if exist
+//      if (fscanf(file, "%ld %ld\n", &ulen, &plen) != 2) {
+//          break;
+//      }
+//      // read username
+//      char *uname = (char*)malloc(ulen+ 1);
+//      if (!uname)
+//      { 
+//        fclose(file); return -1; 
+//      }
+//      fread(uname, 1, ulen, file);
+//      uname[ulen] = '\0';
+//      // read password
+//      char *pword = (char*)malloc(plen +1);
+//      if (!pword) 
+//      { 
+//        free(uname); 
+//        fclose(file);
+//        return -1; 
+//      }
+//      fread(pword, 1, plen, file);
+//      pword[plen] = '\0';
+//      // check username
+//      if (strcmp(uname, username) == 0) {
+//          int result;
+//          if (strcmp(pword, password) == 0) {
+//              result = 1;  
+//          } else {
+//              result = -3; // The username exists but the password does not match.
+//          }
+//          free(uname);
+//          free(pword);
+//          fclose(file);
+//          return result; // return 1 2 3 status code;
+//      }
+//      free(uname);
+//      free(pword);
+//  }
+//  fclose(file);
+//  return -2; // user DNE
+//}
+
 int add_user_password(const char* file_name, const char* username, const char* password) {
-  // implement me
-  FILE *file;
-  long ulen = strlen(username);
-  long plen = strlen(password);
-  file = fopen(file_name, "r+");
-  if(!file){ 
-    file = fopen(file_name,"w"); //If file does not exist, make a new file right now.
-    if (!file) // if fail to opne of make a file
-    {
-      return -1;
+    // implement me
+    FILE* file;
+    long ulen = strlen(username);
+    long plen = strlen(password);
+
+    file = fopen(file_name, "r+");
+    if (!file) {
+        file = fopen(file_name, "w"); //If file does not exist, make a new file right now.
+        if (!file) return -1;
+
+        fprintf(file, "%ld %ld ", ulen, plen);  
+        fwrite(username, 1, ulen, file); //Write down username and password
+        fwrite(password, 1, plen, file);
+        fclose(file);
+        return 1;
     }
-    fprintf(file, "%ld %ld\n", ulen,plen);
-    fwrite(username, 1, ulen, file); //Write down username and password
+
+    while (1) { // If the file exist
+        long existing_ulen, existing_plen;
+        if (fscanf(file, "%ld %ld ", &existing_ulen, &existing_plen) != 2) break; // then check the data if integrity
+
+        char* existing_user = (char*)malloc(existing_ulen + 1); //Allocate memory for the username that is about to be read
+        if (!existing_user) { fclose(file); return -1; }
+        if (fread(existing_user, 1, existing_ulen, file) != existing_ulen) {
+            free(existing_user);
+            fclose(file);
+            return -1;
+        }
+        existing_user[existing_ulen] = '\0';
+
+       // Skip the password part corresponding to this user because we only want to check if the username exists here
+        if (fseek(file, existing_plen, SEEK_CUR) != 0) {
+            free(existing_user);
+            fclose(file);
+            return -1;
+        }
+
+        if (strcmp(existing_user, username) == 0) {
+            free(existing_user);
+            fclose(file);
+            return 0;
+        }
+
+        free(existing_user);
+    }
+
+    fseek(file, 0, SEEK_END); //user does not exist then Move to the end of the file and write
+    fprintf(file, "%ld %ld ", ulen, plen);
+    fwrite(username, 1, ulen, file);
     fwrite(password, 1, plen, file);
     fclose(file);
     return 1;
-  }
-
-  while (1) // If the file exist
-  {
-    long existing_ulen;
-    long existing_plen;
-    if(fscanf(file, "%ld %ld\n", &existing_ulen, existing_plen) != 2){ // then check the data if integrity
-      break;
-    }
-    char *existing_user = (char*)malloc(existing_ulen + 1); //Allocate memory for the username that is about to be read
-    if (!existing_user)
-    {
-      fclose(file);
-      return -1;
-    }
-    fread(existing_user, 1, existing_ulen, file); 
-    existing_user[existing_ulen] = '\0';
-
-    // Skip the password part corresponding to this user (because we only want to check if the username exists here)
-    fseek(file, existing_plen,SEEK_CUR);
-    if (strcmp(existing_user, username)==0)
-    {
-      free(existing_user);
-      fclose(file);
-      return 0;
-    }
-    free(existing_user);
-  }
-  fseek(file, 0, SEEK_END); //user does not exist then Move to the end of the file and write
-  fprintf(file, "%ld %ld\n", ulen, plen);
-  fwrite(username, 1, ulen, file);
-  fwrite(password, 1, plen, file);
-  fclose(file);
-
-  return 1;
 }
 
+
 int check_user_password(const char* file_name, const char* username, const char* password) {
-  // implement me
-  FILE *file;
-  long ulen, plen;
-  long input_ulen = strlen(username);
-  long input_plen = strlen(password);
-  file = fopen(file_name, "r"); // reading mode
-  if (!file) {
-      return -1; // the file does not exist
-  }
-  while (1) {
-      // check username and password if exist
-      if (fscanf(file, "%ld %ld\n", &ulen, &plen) != 2) {
-          break;
-      }
-      // read username
-      char *uname = (char*)malloc(ulen+ 1);
-      if (!uname)
-      { 
-        fclose(file); return -1; 
-      }
-      fread(uname, 1, ulen, file);
-      uname[ulen] = '\0';
-      // read password
-      char *pword = (char*)malloc(plen +1);
-      if (!pword) 
-      { 
-        free(uname); 
-        fclose(file);
-        return -1; 
-      }
-      fread(pword, 1, plen, file);
-      pword[plen] = '\0';
-      // check username
-      if (strcmp(uname, username) == 0) {
-          int result;
-          if (strcmp(pword, password) == 0) {
-              result = 1;  
-          } else {
-              result = -3; // The username exists but the password does not match.
-          }
-          free(uname);
-          free(pword);
-          fclose(file);
-          return result; // return 1 2 3 status code;
-      }
-      free(uname);
-      free(pword);
-  }
-  fclose(file);
-  return -2; // user DNE
+    // implement me
+    FILE* file;
+    long ulen, plen;
+
+    file = fopen(file_name, "r"); // reading mode
+    if (!file) return -1; // the file does not exist
+
+    while (1) {  // check username and password if exist
+        if (fscanf(file, "%ld %ld ", &ulen, &plen) != 2) break;
+
+        char* uname = (char*)malloc(ulen + 1);
+        if (!uname) { fclose(file); return -1; } //read username
+        if (fread(uname, 1, ulen, file) != ulen) {
+            free(uname); fclose(file); return -1;
+        }
+        uname[ulen] = '\0'; //the last digit
+
+        char* pword = (char*)malloc(plen + 1);
+        if (!pword) { free(uname); fclose(file); return -1; }
+        if (fread(pword, 1, plen, file) != plen) { // read password
+            free(uname); free(pword); fclose(file); return -1;
+        }
+        pword[plen] = '\0';
+
+        if (strcmp(uname, username) == 0) {
+            int result = strcmp(pword, password) == 0 ? 1 : -3;
+            free(uname);
+            free(pword); //release memory
+            fclose(file);
+            return result; // return 1 2 3 status code;
+        }
+
+        free(uname);
+        free(pword);
+    }
+
+    fclose(file);
+    return -2; // user DNE
 }
 
 
